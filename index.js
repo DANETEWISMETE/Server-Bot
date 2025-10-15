@@ -15,14 +15,14 @@ const SERVER_PORT = 25565;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// ---- COMANDOS ----
+// ---- COMANDO /status ----
 const commands = [
   new SlashCommandBuilder()
     .setName('status')
     .setDescription('Verifica el estado del servidor de Minecraft')
 ].map(cmd => cmd.toJSON());
 
-// ---- EVENTOS ----
+// ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
@@ -53,8 +53,6 @@ client.on('shardError', console.error);
 // ---- LOGIN DEL BOT ----
 (async () => {
   try {
-    console.log('🔹 Esperando 3 segundos antes de conectar...');
-    await new Promise(r => setTimeout(r, 3000)); // Espera de seguridad
     console.log('🔹 Intentando conectar el bot...');
     await client.login(TOKEN);
     console.log(`✅ Bot conectado como ${client.user.tag}`);
@@ -63,17 +61,20 @@ client.on('shardError', console.error);
   }
 })();
 
-// ---- SERVIDOR WEB (para Render) ----
+// ---- SERVIDOR WEB ----
 const app = express();
 
+// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 
+// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
-  if (client.ws?.status === 0) res.send('Bot y servidor activo ✅');
-  else res.status(500).send('Bot desconectado ❌');
+  if (client.ws?.status === 0) { // 0 = READY
+    res.send('Bot y servidor activo ✅');
+  } else {
+    res.status(500).send('Bot desconectado ❌');
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
-
-
