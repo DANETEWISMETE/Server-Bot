@@ -42,7 +42,7 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
     try {
-      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 20000 });
+      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 10000 });
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
     } catch {
       await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
