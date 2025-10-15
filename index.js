@@ -10,7 +10,7 @@ const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const SERVER_IP = 'tu.servidor.minecraft'; // 🔹 Cambia por tu IP o dominio
-const SERVER_PORT = 25565; // 🔹 Cambia si usas otro puerto
+const SERVER_PORT = process.env.SERVER_PORT; // 🔹 Cambia si usas otro puerto
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
