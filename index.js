@@ -9,11 +9,13 @@ dotenv.config();
 const TOKEN     = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID  = process.env.GUILD_ID;
-const SERVER_IP   = process.env.SERVER_IP   || 'tu.servidor.minecraft';
+
+// Variables de entorno para Minecraft
+const SERVER_IP   = process.env.SERVER_IP || 'tu.servidor.minecraft';
 const SERVER_PORT = parseInt(process.env.SERVER_PORT, 10) || 25565;
 
-const MAX_RETRIES = 3;
-const TIMEOUT     = 10000;
+const MAX_RETRIES = 3;      
+const TIMEOUT     = 10000;  
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -68,6 +70,7 @@ client.on('interactionCreate', async interaction => {
 
     try {
       const result = await pingServer();
+
       const motd =
         (Array.isArray(result.motd?.clean) && result.motd.clean.join(' ')) ||
         (Array.isArray(result.motd?.raw) && result.motd.raw.join(' ')) ||
@@ -83,3 +86,45 @@ client.on('interactionCreate', async interaction => {
       );
     } catch (error) {
       console.error('❌ Error consultando estado del servidor:', error);
+      await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
+    }
+  }
+});
+
+// ---- LOGS DE ERRORES ----
+client.on('error', err => console.error('💥 Error del cliente Discord:', err));
+client.on('shardError', err => console.error('💥 ShardError:', err));
+
+// ---- LOGIN DEL BOT CON LOG DETALLADO ----
+(async () => {
+  try {
+    console.log('🔹 Intentando conectar el bot...');
+    await client.login(TOKEN);
+    console.log(`✅ Bot login completado: ${client.user?.tag || 'Desconocido'}`);
+  } catch (err) {
+    console.error('❌ Error al iniciar sesión en Discord:');
+    console.error(err.stack || err);
+  }
+})();
+
+// ---- SERVIDOR EXPRESS ----
+const app = express();
+
+app.get('/', (req, res) => res.send('🌐 Bot activo y funcionando correctamente.'));
+
+app.get('/health', (req, res) => {
+  if (botReady && client.isReady()) {
+    res.send('✅ Bot conectado a Discord y operativo.');
+  } else {
+    res.status(500).send('❌ Bot desconectado o no listo.');
+  }
+});
+
+// Monitor de estado cada 30 s
+setInterval(() => {
+  console.log(`🔎 Estado del bot: ${botReady && client.isReady() ? 'READY' : 'DESCONECTADO'}`);
+}, 30000);
+
+// ---- INICIAR SERVIDOR WEB ----
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
