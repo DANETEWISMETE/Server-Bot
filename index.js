@@ -1,3 +1,6 @@
+process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
+process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
+
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import express from 'express';
 import { status } from 'minecraft-server-util';
