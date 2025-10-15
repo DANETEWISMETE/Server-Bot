@@ -54,7 +54,9 @@ client.on('shardError', console.error);
 // ---- SERVIDOR WEB ----
 const app = express();
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
-app.listen(3000, () => console.log('🌐 Servidor web activo en puerto 3000.'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
+
 
 // ---- LOGIN ----
 client.login(TOKEN);
