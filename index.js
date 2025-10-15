@@ -11,18 +11,24 @@ const GUILD_ID = process.env.GUILD_ID;
 const SERVER_IP = 'tu.servidor.minecraft';
 const SERVER_PORT = 25565;
 
+// ---- VALIDACIÓN INICIAL ----
+console.log('🧩 Verificando variables de entorno...');
+console.log('TOKEN:', TOKEN ? '✅ Presente' : '❌ No definido');
+console.log('CLIENT_ID:', CLIENT_ID ? '✅ Presente' : '❌ No definido');
+console.log('GUILD_ID:', GUILD_ID ? '✅ Presente' : '❌ No definido');
+
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// ---- COMANDO /status ----
+// ---- COMANDOS ----
 const commands = [
   new SlashCommandBuilder()
     .setName('status')
     .setDescription('Verifica el estado del servidor de Minecraft')
 ].map(cmd => cmd.toJSON());
 
-// ---- EVENTOS DE DISCORD ----
+// ---- EVENTOS ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
@@ -47,34 +53,32 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('error', console.error);
-client.on('shardError', console.error);
+client.on('error', err => console.error('⚠️ Error de cliente Discord:', err));
+client.on('shardError', err => console.error('⚠️ Error de shard Discord:', err));
 
 // ---- LOGIN DEL BOT ----
 (async () => {
   try {
     console.log('🔹 Intentando conectar el bot...');
+    if (!TOKEN) throw new Error('El TOKEN no está definido en las variables de entorno');
     await client.login(TOKEN);
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
+    console.log(`✅ Login exitoso como ${client.user?.tag || '(desconocido)'}`);
   } catch (err) {
     console.error('❌ Error al iniciar sesión en Discord:', err);
+    console.error('📦 Valor actual de TOKEN:', TOKEN ? 'Presente ✅' : 'No definido ❌');
   }
 })();
 
-// ---- SERVIDOR WEB ----
+// ---- SERVIDOR WEB (para Render) ----
 const app = express();
 
-// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 
-// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
-  if (client.ws?.status === 0) { // 0 = READY
-    res.send('Bot y servidor activo ✅');
-  } else {
-    res.status(500).send('Bot desconectado ❌');
-  }
+  if (client.ws?.status === 0) res.send('Bot y servidor activo ✅');
+  else res.status(500).send('Bot desconectado ❌');
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
+
