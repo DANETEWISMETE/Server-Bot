@@ -8,8 +8,6 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-console.log('🔹 process.env.PORT:', process.env.PORT);
-console.log('🔹 TOKEN length:', TOKEN?.length);
 // Puerto del servidor Minecraft
 const SERVER_IP = 'tu.servidor.minecraft';
 const SERVER_PORT = 25565; // Solo para minecraft-server-util
@@ -45,7 +43,7 @@ client.on('interactionCreate', async interaction => {
       const result = await Promise.race([
         status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout de Minecraft')), 8000)
+          setTimeout(() => reject(new Error('Timeout de Minecraft')), 5000)
         )
       ]);
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
