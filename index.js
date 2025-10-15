@@ -40,7 +40,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
 
     try {
-      // Evitar que un status muy lento bloquee el bot
+      // Timeout seguro para no bloquear el bot
       const result = await Promise.race([
         status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
         new Promise((_, reject) =>
@@ -82,9 +82,13 @@ app.get('/health', (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// Usar siempre el puerto asignado por Render
+const PORT = process.env.PORT;
+if (!PORT) throw new Error('🚨 PORT no definido en el entorno de Render');
+
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
 
 // ---- ERRORES GLOBALES ----
 process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
 process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
+
