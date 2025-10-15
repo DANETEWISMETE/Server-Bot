@@ -22,7 +22,7 @@ const commands = [
     .setDescription('Verifica el estado del servidor de Minecraft')
 ].map(cmd => cmd.toJSON());
 
-// ---- EVENTOS ----
+// ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
@@ -48,7 +48,10 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// ---- LOGGING DEL BOT ----
+client.on('error', err => console.error('⚠️ Error del bot:', err));
+client.on('shardError', err => console.error('⚠️ Error del shard:', err));
+
+// ---- LOGIN CON LOGGING CONFIABLE ----
 (async () => {
   try {
     console.log('🔹 Intentando conectar el bot...');
@@ -63,11 +66,20 @@ client.once('ready', () => {
   console.log(`✨ Bot listo y online: ${client.user.tag}`);
 });
 
-client.on('error', err => console.error('⚠️ Error del bot:', err));
-client.on('shardError', err => console.error('⚠️ Error del shard:', err));
-
 // ---- SERVIDOR WEB ----
 const app = express();
+
+// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
+
+// Endpoint health check para UptimeRobot
+app.get('/health', (req, res) => {
+  if (client.isReady()) {
+    res.send('Bot y servidor activo ✅');
+  } else {
+    res.status(500).send('Bot desconectado ❌');
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
