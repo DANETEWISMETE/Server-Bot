@@ -48,23 +48,26 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('error', console.error);
-client.on('shardError', console.error);
+// ---- LOGGING DEL BOT ----
+(async () => {
+  try {
+    console.log('🔹 Intentando conectar el bot...');
+    await client.login(TOKEN);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
+  } catch (err) {
+    console.error('❌ Error al iniciar sesión en Discord:', err);
+  }
+})();
+
+client.once('ready', () => {
+  console.log(`✨ Bot listo y online: ${client.user.tag}`);
+});
+
+client.on('error', err => console.error('⚠️ Error del bot:', err));
+client.on('shardError', err => console.error('⚠️ Error del shard:', err));
 
 // ---- SERVIDOR WEB ----
 const app = express();
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
-
-
-// ---- LOGIN ----
-console.log('🔹 Intentando conectar el bot...');
-client.login(TOKEN)
-  .then(() => console.log(`✅ Bot conectado como ${client.user.tag}`))
-  .catch(err => console.error('❌ Error al iniciar sesión en Discord:', err));
-
-client.on('ready', () => console.log(`✨ Bot listo y online: ${client.user.tag}`));
-client.on('error', err => console.error('⚠️ Error del bot:', err));
-client.on('shardError', err => console.error('⚠️ Error del shard:', err));
-
