@@ -1,29 +1,18 @@
-// archivo: test-discord.js
-import { Client, GatewayIntentBits } from 'discord.js';
-import dotenv from 'dotenv';
-dotenv.config();
+import express from 'express';
 
-const TOKEN = process.env.TOKEN;
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Endpoint principal
+app.get('/', (req, res) => res.send('🌐 Bot activo y funcionando correctamente.'));
 
-client.on('ready', () => {
-  console.log(`✅ Conectado correctamente: ${client.user.tag}`);
-  process.exit(0); // Sale después de confirmar ready
+// Health check
+app.get('/health', (req, res) => {
+  if (botReady && client.isReady()) {
+    res.send('✅ Bot conectado a Discord y operativo.');
+  } else {
+    res.status(500).send('❌ Bot desconectado o no listo.');
+  }
 });
 
-client.on('error', err => console.error('💥 Error de cliente:', err));
-client.on('warn', warn => console.warn('⚠️ Warn:', warn));
-client.on('debug', info => console.log('🛈 Debug:', info));
-
-client.on('raw', packet => console.log('📦 RAW packet:', packet.t));
-
-(async () => {
-  try {
-    console.log('🔹 Intentando conectar al gateway de Discord...');
-    await client.login(TOKEN);
-  } catch (err) {
-    console.error('❌ Error al iniciar sesión en Discord:', err);
-    process.exit(1);
-  }
-})();
+app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
