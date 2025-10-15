@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": "18.x"
   "scripts": {
     "start": "node index.js",
     "bot": "node index.js",
