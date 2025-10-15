@@ -8,8 +8,10 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
+
+// Puerto del servidor Minecraft
 const SERVER_IP = 'tu.servidor.minecraft';
-const SERVER_PORT = 25565;
+const SERVER_PORT = 25565; // Solo para minecraft-server-util
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -25,7 +27,6 @@ const commands = [
 // ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
-
   try {
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
     console.log('✅ Comando /status registrado correctamente.');
@@ -38,16 +39,13 @@ client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
-
     try {
-      // Timeout seguro para no bloquear el bot
       const result = await Promise.race([
         status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout de Minecraft')), 15000)
         )
       ]);
-
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
     } catch (err) {
       console.error('❌ Error al consultar el servidor Minecraft:', err);
