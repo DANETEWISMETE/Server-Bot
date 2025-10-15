@@ -1,6 +1,3 @@
-process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
-process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
-
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import express from 'express';
 import { status } from 'minecraft-server-util';
@@ -41,10 +38,19 @@ client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
+
     try {
-      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 10000 });
+      // Evitar que un status muy lento bloquee el bot
+      const result = await Promise.race([
+        status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout de Minecraft')), 15000)
+        )
+      ]);
+
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
-    } catch {
+    } catch (err) {
+      console.error('❌ Error al consultar el servidor Minecraft:', err);
       await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
     }
   }
@@ -67,12 +73,9 @@ client.on('shardError', console.error);
 // ---- SERVIDOR WEB ----
 const app = express();
 
-// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
-
-// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
-  if (client.ws?.status === 0) { // 0 = READY
+  if (client.ws?.status === 0) {
     res.send('Bot y servidor activo ✅');
   } else {
     res.status(500).send('Bot desconectado ❌');
@@ -81,3 +84,7 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
+
+// ---- ERRORES GLOBALES ----
+process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
+process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
