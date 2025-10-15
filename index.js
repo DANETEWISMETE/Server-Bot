@@ -1,5 +1,3 @@
-console.log('🔹 process.env.PORT:', process.env.PORT);
-console.log('🔹 TOKEN length:', TOKEN?.length);
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import express from 'express';
 import { status } from 'minecraft-server-util';
@@ -10,7 +8,8 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-
+console.log('🔹 process.env.PORT:', process.env.PORT);
+console.log('🔹 TOKEN length:', TOKEN?.length);
 // Puerto del servidor Minecraft
 const SERVER_IP = 'tu.servidor.minecraft';
 const SERVER_PORT = 25565; // Solo para minecraft-server-util
