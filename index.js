@@ -59,4 +59,12 @@ app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`)
 
 
 // ---- LOGIN ----
-client.login(TOKEN);
+console.log('🔹 Intentando conectar el bot...');
+client.login(TOKEN)
+  .then(() => console.log(`✅ Bot conectado como ${client.user.tag}`))
+  .catch(err => console.error('❌ Error al iniciar sesión en Discord:', err));
+
+client.on('ready', () => console.log(`✨ Bot listo y online: ${client.user.tag}`));
+client.on('error', err => console.error('⚠️ Error del bot:', err));
+client.on('shardError', err => console.error('⚠️ Error del shard:', err));
+
