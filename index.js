@@ -52,9 +52,11 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// ---- LOG DE ERRORES ----
-client.on('error', err => console.error('❌ Error del cliente Discord:', err));
-client.on('shardError', err => console.error('❌ Error de shard Discord:', err));
+// ---- LOG DE ERRORES Y RECONEXIÓN ----
+client.on('error', err => console.error('❌ Error Discord:', err));
+client.on('shardError', err => console.error('❌ Error shard Discord:', err));
+client.on('disconnect', () => console.log('❌ Desconectado de Discord'));
+client.on('reconnecting', () => console.log('🔄 Reintentando conexión a Discord...'));
 
 // ---- LOGIN DEL BOT ----
 (async () => {
