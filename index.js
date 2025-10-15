@@ -6,20 +6,25 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // ---- CONFIGURACIÓN ----
-const TOKEN = process.env.TOKEN;
+const TOKEN     = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = process.env.GUILD_ID;
-const SERVER_IP = 'tu.servidor.minecraft'; // 🔹 Cambia por tu dominio o IP pública
-const SERVER_PORT = process.env.SERVER_PORT; // 🔹 Cambia si usas otro puerto
+const GUILD_ID  = process.env.GUILD_ID;
+
+// Usando variables de entorno para el servidor Minecraft
+const SERVER_IP   = process.env.SERVER_IP   || 'tu.servidor.minecraft';
+const SERVER_PORT = parseInt(process.env.SERVER_PORT, 10) || 25565;
+
+const MAX_RETRIES = 3;      // Reintentos para ping de Minecraft
+const TIMEOUT     = 10000;  // Timeout para ping (ms)
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+const rest   = new REST({ version: '10' }).setToken(TOKEN);
 
-// ---- VARIABLE DE ESTADO ----
+// ---- ESTADO DEL BOT ----
 let botReady = false;
 
-// ---- COMANDO /status ----
+// ---- COMANDOS ----
 const commands = [
   new SlashCommandBuilder()
     .setName('status')
@@ -39,16 +44,27 @@ client.once('ready', async () => {
   }
 });
 
+// ---- PING CON REINTENTOS ----
+async function pingServer(retries = MAX_RETRIES) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await statusJava(SERVER_IP, SERVER_PORT, { timeout: TIMEOUT, enableSRV: true });
+    } catch (err) {
+      console.warn(`Intento ${i + 1} fallido para ping a Minecraft, reintentando...`);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+  throw new Error('No se pudo conectar al servidor Minecraft');
+}
+
+// ---- COMANDO /status ----
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
 
     try {
-      const result = await statusJava(SERVER_IP, SERVER_PORT, {
-        timeout: 10000, // ⏱️ más tiempo para Render
-        enableSRV: true, // ✅ resuelve SRV records
-      });
+      const result = await pingServer();
 
       const motd =
         (Array.isArray(result.motd?.clean) && result.motd.clean.join(' ')) ||
@@ -70,8 +86,9 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('error', err => console.error('❌ Error del cliente Discord:', err));
-client.on('shardError', err => console.error('❌ Error de shard:', err));
+// ---- LOGS DE DEPURACIÓN ----
+client.on('error', err => console.error('💥 Error del cliente Discord:', err));
+client.on('shardError', err => console.error('💥 ShardError:', err));
 
 // ---- LOGIN DEL BOT ----
 (async () => {
@@ -91,7 +108,7 @@ const app = express();
 // Endpoint raíz
 app.get('/', (req, res) => res.send('🌐 Bot activo y funcionando correctamente.'));
 
-// Endpoint health mejorado
+// Endpoint /health confiable
 app.get('/health', (req, res) => {
   if (botReady && client.isReady()) {
     res.send('✅ Bot conectado a Discord y operativo.');
@@ -100,7 +117,7 @@ app.get('/health', (req, res) => {
   }
 });
 
-// Monitor de estado cada 60 s (útil en Render)
+// Monitor de estado cada 60 s
 setInterval(() => {
   console.log(`🔎 Estado del bot: ${botReady && client.isReady() ? 'READY' : 'DESCONECTADO'}`);
 }, 60000);
