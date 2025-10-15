@@ -8,9 +8,8 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-// Puerto del servidor Minecraft
 const SERVER_IP = 'tu.servidor.minecraft';
-const SERVER_PORT = 25565; // Solo para minecraft-server-util
+const SERVER_PORT = 25565;
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -40,15 +39,9 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
     try {
-      const result = await Promise.race([
-        status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout de Minecraft')), 5000)
-        )
-      ]);
+      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 5000 });
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
-    } catch (err) {
-      console.error('❌ Error al consultar el servidor Minecraft:', err);
+    } catch {
       await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
     }
   }
@@ -57,37 +50,31 @@ client.on('interactionCreate', async interaction => {
 client.on('error', console.error);
 client.on('shardError', console.error);
 
+// ---- LOGIN DEL BOT ----
+(async () => {
+  try {
+    console.log('🔹 Intentando conectar el bot...');
+    await client.login(TOKEN);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
+  } catch (err) {
+    console.error('❌ Error al iniciar sesión en Discord:', err);
+  }
+})();
+
 // ---- SERVIDOR WEB ----
 const app = express();
 
+// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
+
+// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
-  if (client.ws?.status === 0) {
+  if (client.ws?.status === 0) { // 0 = READY
     res.send('Bot y servidor activo ✅');
   } else {
     res.status(500).send('Bot desconectado ❌');
   }
 });
 
-// ---- Puerto dinámico de Render ----
-const PORT = process.env.PORT;
-if (!PORT) throw new Error('🚨 PORT no definido en el entorno de Render');
-
-app.listen(PORT, () => {
-  console.log(`🌐 Servidor web activo en puerto ${PORT}`);
-
-  // ---- LOGIN DEL BOT DESPUÉS DE QUE EXPRESS ARRANCA ----
-  (async () => {
-    try {
-      console.log('🔹 Intentando conectar el bot...');
-      await client.login(TOKEN);
-      console.log(`✅ Bot conectado como ${client.user.tag}`);
-    } catch (err) {
-      console.error('❌ Error al iniciar sesión en Discord:', err);
-    }
-  })();
-});
-
-// ---- ERRORES GLOBALES ----
-process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
-process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
