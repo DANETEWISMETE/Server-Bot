@@ -22,12 +22,11 @@ const commands = [
     .setDescription('Verifica el estado del servidor de Minecraft')
 ].map(cmd => cmd.toJSON());
 
-// ---- EVENTOS ----
+// ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
   try {
-    console.log('🔄 Registrando comandos de barra (/)...');
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
     console.log('✅ Comando /status registrado correctamente.');
   } catch (error) {
@@ -51,10 +50,31 @@ client.on('interactionCreate', async interaction => {
 client.on('error', console.error);
 client.on('shardError', console.error);
 
+// ---- LOGIN DEL BOT ----
+(async () => {
+  try {
+    console.log('🔹 Intentando conectar el bot...');
+    await client.login(TOKEN);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
+  } catch (err) {
+    console.error('❌ Error al iniciar sesión en Discord:', err);
+  }
+})();
+
 // ---- SERVIDOR WEB ----
 const app = express();
-app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
-app.listen(3000, () => console.log('🌐 Servidor web activo en puerto 3000.'));
 
-// ---- LOGIN ----
-client.login(TOKEN);
+// Endpoint principal
+app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
+
+// Endpoint health check confiable usando client.ws.status
+app.get('/health', (req, res) => {
+  if (client.ws?.status === 0) { // 0 = READY
+    res.send('Bot y servidor activo ✅');
+  } else {
+    res.status(500).send('Bot desconectado ❌');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
