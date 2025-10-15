@@ -27,7 +27,6 @@ client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
   try {
-    console.log('🔄 Registrando comandos de barra (/)...');
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
     console.log('✅ Comando /status registrado correctamente.');
   } catch (error) {
@@ -48,10 +47,10 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('error', err => console.error('⚠️ Error del bot:', err));
-client.on('shardError', err => console.error('⚠️ Error del shard:', err));
+client.on('error', console.error);
+client.on('shardError', console.error);
 
-// ---- LOGIN DEL BOT CON LOGGING ----
+// ---- LOGIN DEL BOT ----
 (async () => {
   try {
     console.log('🔹 Intentando conectar el bot...');
@@ -62,17 +61,13 @@ client.on('shardError', err => console.error('⚠️ Error del shard:', err));
   }
 })();
 
-client.once('ready', () => {
-  console.log(`✨ Bot listo y online: ${client.user.tag}`);
-});
-
 // ---- SERVIDOR WEB ----
 const app = express();
 
 // Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 
-// Endpoint health check confiable para UptimeRobot usando client.ws.status
+// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
   if (client.ws?.status === 0) { // 0 = READY
     res.send('Bot y servidor activo ✅');
