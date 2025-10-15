@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "bot": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "build": "echo 'No build needed'"
   },
   "dependencies": {
     "discord.js": "^14.23.2",
