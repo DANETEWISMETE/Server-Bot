@@ -1,27 +1,31 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import express from 'express';
 import { status } from 'minecraft-server-util';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // ---- CONFIGURACIÓN ----
-const TOKEN = 'TU_TOKEN_AQUI';
-const CLIENT_ID = 'TU_CLIENT_ID_AQUI'; // lo obtienes desde el portal de Discord Developer
-const GUILD_ID = 'TU_GUILD_ID_AQUI';   // tu servidor de Discord
-const SERVER_IP = 'tu.servidor.minecraft'; // ejemplo: play.hypixel.net
-const SERVER_PORT = 25565; // cambia si tu server usa otro puerto
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+const GUILD_ID = process.env.GUILD_ID;
+const SERVER_IP = 'tu.servidor.minecraft';
+const SERVER_PORT = 25565;
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// ---- REGISTRAR SLASH COMMAND /status ----
+// ---- COMANDO /status ----
 const commands = [
   new SlashCommandBuilder()
     .setName('status')
     .setDescription('Verifica el estado del servidor de Minecraft')
-].map(command => command.toJSON());
+].map(cmd => cmd.toJSON());
 
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+// ---- EVENTOS ----
+client.once('ready', async () => {
+  console.log(`✅ Bot conectado como ${client.user.tag}`);
 
-(async () => {
   try {
     console.log('🔄 Registrando comandos de barra (/)...');
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
@@ -29,34 +33,28 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
   } catch (error) {
     console.error('❌ Error al registrar comandos:', error);
   }
-})();
-
-// ---- EVENTOS DEL BOT ----
-client.once('ready', () => {
-  console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
   if (interaction.commandName === 'status') {
-    await interaction.deferReply(); // muestra "pensando..." mientras se procesa
-
+    await interaction.deferReply();
     try {
       const result = await status(SERVER_IP, SERVER_PORT, { timeout: 5000 });
-      const playersOnline = result.players.online;
-      const maxPlayers = result.players.max;
-      await interaction.editReply(`🟢 **Servidor en línea**\nJugadores: ${playersOnline}/${maxPlayers}`);
-    } catch (error) {
-      await interaction.editReply('🔴 El servidor está **fuera de línea** o no responde.');
+      await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
+    } catch {
+      await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
     }
   }
 });
 
-// ---- MANTENER EL BOT ACTIVO (para Replit o Railway) ----
+client.on('error', console.error);
+client.on('shardError', console.error);
+
+// ---- SERVIDOR WEB ----
 const app = express();
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 app.listen(3000, () => console.log('🌐 Servidor web activo en puerto 3000.'));
 
-// ---- INICIAR BOT ----
+// ---- LOGIN ----
 client.login(TOKEN);
