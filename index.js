@@ -15,9 +15,6 @@ const SERVER_PORT = 25565;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// Flag para verificar si el bot está listo
-let botReady = false;
-
 // ---- COMANDO /status ----
 const commands = [
   new SlashCommandBuilder()
@@ -28,7 +25,6 @@ const commands = [
 // ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
-  botReady = true;
 
   try {
     console.log('🔄 Registrando comandos de barra (/)...');
@@ -76,9 +72,9 @@ const app = express();
 // Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 
-// Endpoint health check confiable para UptimeRobot
+// Endpoint health check confiable para UptimeRobot usando client.ws.status
 app.get('/health', (req, res) => {
-  if (botReady) {
+  if (client.ws?.status === 0) { // 0 = READY
     res.send('Bot y servidor activo ✅');
   } else {
     res.status(500).send('Bot desconectado ❌');
@@ -87,4 +83,3 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
-
