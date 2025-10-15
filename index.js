@@ -9,13 +9,10 @@ dotenv.config();
 const TOKEN     = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID  = process.env.GUILD_ID;
-
-// Variables de entorno para Minecraft
-const SERVER_IP   = process.env.SERVER_IP || 'tu.servidor.minecraft';
+const SERVER_IP   = process.env.SERVER_IP   || 'tu.servidor.minecraft';
 const SERVER_PORT = parseInt(process.env.SERVER_PORT, 10) || 25565;
-
-const MAX_RETRIES = 3;      
-const TIMEOUT     = 10000;  
+const MAX_RETRIES = 3;
+const TIMEOUT     = 10000;
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -26,6 +23,8 @@ let botReady = false;
 
 // ---- LOGS DE DEBUG ----
 client.on('debug', info => console.log('🛈 Discord.js debug:', info));
+client.on('warn', info => console.warn('⚠️ Warn:', info));
+client.on('raw', packet => console.log('📦 RAW packet:', packet.t));
 process.on('unhandledRejection', err => console.error('❌ UnhandledPromiseRejection:', err));
 process.on('uncaughtException', err => console.error('❌ UncaughtException:', err));
 
@@ -95,8 +94,8 @@ client.on('interactionCreate', async interaction => {
 client.on('error', err => console.error('💥 Error del cliente Discord:', err));
 client.on('shardError', err => console.error('💥 ShardError:', err));
 
-// ---- LOGIN DEL BOT CON LOG DETALLADO ----
-(async () => {
+// ---- LOGIN DEL BOT CON RECONEXIÓN AUTOMÁTICA ----
+async function loginBot() {
   try {
     console.log('🔹 Intentando conectar el bot...');
     await client.login(TOKEN);
@@ -104,8 +103,19 @@ client.on('shardError', err => console.error('💥 ShardError:', err));
   } catch (err) {
     console.error('❌ Error al iniciar sesión en Discord:');
     console.error(err.stack || err);
+    // Reintento en 15 segundos
+    setTimeout(loginBot, 15000);
   }
-})();
+}
+loginBot();
+
+// Reconexión si no se dispara ready en 30s
+setTimeout(() => {
+  if (!botReady) {
+    console.warn('⚠️ Bot no conectó en 30s, reintentando login...');
+    loginBot();
+  }
+}, 30000);
 
 // ---- SERVIDOR EXPRESS ----
 const app = express();
@@ -125,6 +135,5 @@ setInterval(() => {
   console.log(`🔎 Estado del bot: ${botReady && client.isReady() ? 'READY' : 'DESCONECTADO'}`);
 }, 30000);
 
-// ---- INICIAR SERVIDOR WEB ----
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
