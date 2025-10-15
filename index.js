@@ -45,7 +45,7 @@ client.on('interactionCreate', async interaction => {
       const result = await Promise.race([
         status(SERVER_IP, SERVER_PORT, { timeout: 20000 }),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout de Minecraft')), 15000)
+          setTimeout(() => reject(new Error('Timeout de Minecraft')), 8000)
         )
       ]);
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
