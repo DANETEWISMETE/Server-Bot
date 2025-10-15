@@ -1,3 +1,5 @@
+console.log('🔹 process.env.PORT:', process.env.PORT);
+console.log('🔹 TOKEN length:', TOKEN?.length);
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import express from 'express';
 import { status } from 'minecraft-server-util';
