@@ -59,17 +59,6 @@ client.on('interactionCreate', async interaction => {
 client.on('error', console.error);
 client.on('shardError', console.error);
 
-// ---- LOGIN DEL BOT ----
-(async () => {
-  try {
-    console.log('🔹 Intentando conectar el bot...');
-    await client.login(TOKEN);
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
-  } catch (err) {
-    console.error('❌ Error al iniciar sesión en Discord:', err);
-  }
-})();
-
 // ---- SERVIDOR WEB ----
 const app = express();
 
@@ -86,9 +75,21 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT;
 if (!PORT) throw new Error('🚨 PORT no definido en el entorno de Render');
 
-app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🌐 Servidor web activo en puerto ${PORT}`);
+
+  // ---- LOGIN DEL BOT ----
+  (async () => {
+    try {
+      console.log('🔹 Intentando conectar el bot...');
+      await client.login(TOKEN);
+      console.log(`✅ Bot conectado como ${client.user.tag}`);
+    } catch (err) {
+      console.error('❌ Error al iniciar sesión en Discord:', err);
+    }
+  })();
+});
 
 // ---- ERRORES GLOBALES ----
 process.on('unhandledRejection', err => console.error('❌ Unhandled Rejection:', err));
 process.on('uncaughtException', err => console.error('❌ Uncaught Exception:', err));
-
