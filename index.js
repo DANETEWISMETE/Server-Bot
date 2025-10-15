@@ -82,7 +82,7 @@ app.get('/health', (req, res) => {
   }
 });
 
-// Usar siempre el puerto asignado por Render
+// ---- Puerto dinámico de Render ----
 const PORT = process.env.PORT;
 if (!PORT) throw new Error('🚨 PORT no definido en el entorno de Render');
 
