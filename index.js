@@ -27,6 +27,7 @@ const commands = [
 // ---- EVENTOS DE DISCORD ----
 client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
+
   try {
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
     console.log('✅ Comando /status registrado correctamente.');
@@ -76,7 +77,7 @@ if (!PORT) throw new Error('🚨 PORT no definido en el entorno de Render');
 app.listen(PORT, () => {
   console.log(`🌐 Servidor web activo en puerto ${PORT}`);
 
-  // ---- LOGIN DEL BOT ----
+  // ---- LOGIN DEL BOT DESPUÉS DE QUE EXPRESS ARRANCA ----
   (async () => {
     try {
       console.log('🔹 Intentando conectar el bot...');
