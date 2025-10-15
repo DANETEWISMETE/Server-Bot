@@ -11,12 +11,6 @@ const GUILD_ID = process.env.GUILD_ID;
 const SERVER_IP = 'tu.servidor.minecraft';
 const SERVER_PORT = 25565;
 
-// ---- VALIDACIÓN INICIAL ----
-console.log('🧩 Verificando variables de entorno...');
-console.log('TOKEN:', TOKEN ? '✅ Presente' : '❌ No definido');
-console.log('CLIENT_ID:', CLIENT_ID ? '✅ Presente' : '❌ No definido');
-console.log('GUILD_ID:', GUILD_ID ? '✅ Presente' : '❌ No definido');
-
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -53,19 +47,19 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('error', err => console.error('⚠️ Error de cliente Discord:', err));
-client.on('shardError', err => console.error('⚠️ Error de shard Discord:', err));
+client.on('error', console.error);
+client.on('shardError', console.error);
 
 // ---- LOGIN DEL BOT ----
 (async () => {
   try {
+    console.log('🔹 Esperando 3 segundos antes de conectar...');
+    await new Promise(r => setTimeout(r, 3000)); // Espera de seguridad
     console.log('🔹 Intentando conectar el bot...');
-    if (!TOKEN) throw new Error('El TOKEN no está definido en las variables de entorno');
     await client.login(TOKEN);
-    console.log(`✅ Login exitoso como ${client.user?.tag || '(desconocido)'}`);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
   } catch (err) {
     console.error('❌ Error al iniciar sesión en Discord:', err);
-    console.error('📦 Valor actual de TOKEN:', TOKEN ? 'Presente ✅' : 'No definido ❌');
   }
 })();
 
@@ -81,4 +75,5 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor web activo en puerto ${PORT}`));
+
 
