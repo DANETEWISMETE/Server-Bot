@@ -8,8 +8,8 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-const SERVER_IP = 'tu.servidor.minecraft';
-const SERVER_PORT = 25565;
+const SERVER_IP = process.env.SERVER_IP || 'tu.servidor.minecraft';
+const SERVER_PORT = Number(process.env.SERVER_PORT) || 25565;
 
 // ---- INICIALIZAR DISCORD ----
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -27,6 +27,7 @@ client.once('ready', async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
   try {
+    console.log('🔹 Registrando comandos slash...');
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
     console.log('✅ Comando /status registrado correctamente.');
   } catch (error) {
@@ -36,26 +37,33 @@ client.once('ready', async () => {
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
+
+  console.log('💬 Interacción recibida:', interaction.commandName);
+
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
     try {
       const result = await status(SERVER_IP, SERVER_PORT, { timeout: 5000 });
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
-    } catch {
+    } catch (err) {
+      console.error('❌ Error al consultar el servidor Minecraft:', err);
       await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
     }
   }
 });
 
-client.on('error', console.error);
-client.on('shardError', console.error);
+// ---- LOG DE ERRORES ----
+client.on('error', err => console.error('❌ Error del cliente Discord:', err));
+client.on('shardError', err => console.error('❌ Error de shard Discord:', err));
 
 // ---- LOGIN DEL BOT ----
 (async () => {
+  console.log('🔹 Intentando conectar el bot...');
+  console.log('🔹 Variables cargadas:', { TOKEN: !!TOKEN, CLIENT_ID, GUILD_ID });
+
   try {
-    console.log('🔹 Intentando conectar el bot...');
     await client.login(TOKEN);
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
+    console.log('🔹 Login enviado a Discord, esperando evento ready...');
   } catch (err) {
     console.error('❌ Error al iniciar sesión en Discord:', err);
   }
@@ -64,10 +72,8 @@ client.on('shardError', console.error);
 // ---- SERVIDOR WEB ----
 const app = express();
 
-// Endpoint principal
 app.get('/', (req, res) => res.send('Bot activo y funcionando correctamente.'));
 
-// Endpoint health check confiable usando client.ws.status
 app.get('/health', (req, res) => {
   if (client.ws?.status === 0) { // 0 = READY
     res.send('Bot y servidor activo ✅');
