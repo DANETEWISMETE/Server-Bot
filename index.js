@@ -39,12 +39,9 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'status') {
     await interaction.deferReply();
     try {
-      console.log('🔹 Consultando estado del servidor Minecraft...');
-      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 20000 }); // 20 segundos
-      console.log('🔹 Resultado del servidor:', result);
+      const result = await status(SERVER_IP, SERVER_PORT, { timeout: 20000 });
       await interaction.editReply(`🟢 Servidor en línea: ${result.players.online}/${result.players.max}`);
-    } catch (err) {
-      console.error('❌ Error al consultar el servidor Minecraft:', err);
+    } catch {
       await interaction.editReply('🔴 Servidor fuera de línea o sin respuesta.');
     }
   }
