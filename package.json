@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "start": "node index.js",
     "bot": "node index.js",
     "dev": "node index.js"
   },
